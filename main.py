@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
+from draw import draw_trailer
 from trailer_model import TrailerModel
 
 n_samples = 100
@@ -30,7 +31,19 @@ plt.axhline(1.5, 0, 100, color='lightgray', linestyle='--', linewidth=1)
 plt.axvline(4.5, 0, 100, color='lightgray', linestyle='--', linewidth=1)
 x, y, yaw, yawt, steer = 0, 0, math.radians(0), math.radians(0), math.radians(0)
 trailer = TrailerModel([x, y, yaw, yawt, steer])
-trailer.draw_trailer()
+draw_trailer(trailer.state)
+
+
+
+v = np.array([[1, 2, 3, 4, 5], [2, 1, 5, 4, 3], [2, 3, 4, 5, 6]])
+w = np.array([[2, 3, 4, 5, 6], [2, 1, 4, 5, 6], [2, 3, 2, 5, 6]])
+costs = np.array([1, 2, 1])
+
+exponents = np.exp(-1/10 * costs)
+
+print(exponents)
+print(exponents @ v)
+print(exponents @ v / sum(exponents))
+print(sum(exponents @ v))
 
 plt.show()
-
