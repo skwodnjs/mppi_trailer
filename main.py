@@ -1,49 +1,39 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 
+from MPPIController import MPPIController
 from draw import draw_trailer
 from trailer_model import TrailerModel
 
-n_samples = 100
-horizon = 25
-lamb = 10
-nu = 500
-R = np.diag([1, 5])
-cov = [1, 0.4]
-dt = 0.1
-
-init_state = [0, 0, 0, 0, 0]  # x, y, phi, v, steer
-goal_state = [6, 6, 0]
-
-# Define environment - obstacles
-n_obstacles = 40
-obstacles = np.hstack([np.random.rand(n_obstacles, 1) * 89.5 + 7.5, np.random.rand(n_obstacles, 1) * 92.5 + 4.5, 3 * np.ones((n_obstacles, 1))])
-
-# Plot obstacles and trailer
 a = plt.axes(xlim=(-10, 100), ylim=(-10, 100))
 a.set_aspect('equal')
+
+# Define environment - obstacles
+n_obstacles = 10
+obstacles_radius = 3
+obstacles = np.hstack([np.random.rand(n_obstacles, 1) * (100 - TrailerModel.RF - TrailerModel.RTB - 2 * obstacles_radius) + TrailerModel.RF + obstacles_radius,
+                       np.random.rand(n_obstacles, 1) * (100 - TrailerModel.W / 2 - 20 - 2 * obstacles_radius) + 20 + obstacles_radius,
+                       obstacles_radius * np.ones((n_obstacles, 1))])
 
 for i in range(n_obstacles):
     a.add_patch(plt.Circle(obstacles[i][0:2], obstacles[i][2], fc='b'))
 
-plt.axhline(1.5, 0, 100, color='lightgray', linestyle='--', linewidth=1)
-plt.axvline(4.5, 0, 100, color='lightgray', linestyle='--', linewidth=1)
-x, y, yaw, yawt, steer = 0, 0, math.radians(0), math.radians(0), math.radians(0)
-trailer = TrailerModel([x, y, yaw, yawt, steer])
-draw_trailer(trailer.state)
+plt.axhline(20, 0, 100, color='lightgray', linestyle='--', linewidth=1)
+plt.axvline(TrailerModel.RF, 0, 100, color='lightgray', linestyle='--', linewidth=1)
+plt.axhline(100 - TrailerModel.W / 2, 0, 100, color='lightgray', linestyle='--', linewidth=1)
+plt.axvline(100 - TrailerModel.RTB, 0, 100, color='lightgray', linestyle='--', linewidth=1)
 
+controller = MPPIController(obstacles)
 
+for i in range(300):
+    controller.get_action()
+    if controller.finished():
+        break
 
-v = np.array([[1, 2, 3, 4, 5], [2, 1, 5, 4, 3], [2, 3, 4, 5, 6]])
-w = np.array([[2, 3, 4, 5, 6], [2, 1, 4, 5, 6], [2, 3, 2, 5, 6]])
-costs = np.array([1, 2, 1])
+draw_trailer(controller.init_state, color='#6666FF', alpha=1.0)
+draw_trailer(controller.goal_state, color='#6666FF', alpha=1.0)
 
-exponents = np.exp(-1/10 * costs)
-
-print(exponents)
-print(exponents @ v)
-print(exponents @ v / sum(exponents))
-print(sum(exponents @ v))
-
+plt.xlim(-10, 110)
+plt.ylim(-10, 110)
+plt.gca().set_aspect('equal', adjustable='box')
 plt.show()
